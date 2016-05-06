@@ -1,0 +1,126 @@
+\chapter{Implementation}
+
+\section{Delta-tracking in WARP}
+
+The implementation of delta-tracking in WARP is somewhat similar to the implementation in RACER and 
+Serpent in that it uses a combination of ray tracing and delta-tracking. 
+To understand what is happening in WARP, what follows is an explanation of the general delta-tracking 
+algorithm implemented, a comparison to ray tracing, discussion of the specific implementation in WARP, and
+finally some comments about the performance potential of using delta-tracking on GPUs for the first time.
+
+In WARP, the delta tracking algorithm executes these steps:
+
+\begin{itemize}
+	\item{get current neutron positions using OptiX trace;}
+	\item{calculate majorant cross section, sample path lengths, update neutron coordinates;}
+	\item{update neutron positions and material information using OptiX trace;}
+	\item{calculate material total cross section and perform rejection sampling;}
+	\item{determine neutron interaction.}
+\end{itemize}
+
+\noindent For direct comparison, tracking particles via ray tracing only in WARP is executed as:
+
+\begin{itemize}
+	\item{get current neutron positions using OptiX trace;}
+	\item{calculate macroscopic total cross section and sample path length;}
+	\item{determine with which isotope neutron interacts;}
+	\item{move neutron to collision site or cell boundary, whichever is closer;}
+	\item{determine neutron interaction.}
+\end{itemize}
+
+\noindent From there, with either tracking scheme, neutrons are grouped based on the interactions that 
+they are about to undergo and the vectors are subsequently processed.
+
+\section{Implementation}
+
+In WARP and other Monte Carlo neutron transport codes, particle positions are updated as:
+
+\begin{gather}
+\label{eq:move}
+x \mathrel{+}= \ell\hat{x}, \nonumber\\
+y \mathrel{+}= \ell\hat{y}, \\
+z \mathrel{+}= \ell\hat{z}, \nonumber
+\end{gather}
+
+\noindent where $\ell$, the sampled travel distance is defined as:
+
+\begin{equation}
+\ell = 
+	\begin{cases}
+	\frac{-\log\xi}{\Sigma_{\mathrm{tot}}} & \text{with ray tracing}, \\
+	\frac{-\log\xi}{\Sigma_{\mathrm{maj}}} & \text{with delta-tracking}. \\
+	\end{cases}
+\end{equation}
+
+If ray tracing is being used, a check is performed between the sampled neutron flight distance and the
+distance to the nearest boundary crossing on that trajectory. If the boundary crossing is closer than the
+sampled distance, the particle position is instead updated as
+
+\begin{gather}
+x \mathrel{+}= s\hat{x} + \varepsilon x_{\mathrm{norm}}, \nonumber\\
+y \mathrel{+}= s\hat{y} + \varepsilon y_{\mathrm{norm}}, \\
+z \mathrel{+}= s\hat{z} + \varepsilon z_{\mathrm{norm}}, \nonumber
+\end{gather}
+
+\noindent where $s$ is the distance to the surface to be crossed. The epsilon term added to the position 
+is required
+by the use of the OptiX framework; the inclusion of this term ensures that the neutron is sufficiently far
+ into the new cell such that it can be detected by OptiX and the corresponding material updated
+accordingly. The second term uses vector norms rather than the vector directions in Equation \ref{eq:move}
+to move particles away from the surface in a perpendicular manner rather than potentially along a surface
+boundary (which could cause issues with OptiX detection). In this case of a particle crossing a boundary
+with ray tracing, the particle is stopped at this updated location and the flight path distance must be
+resampled using the total macrscopic cross section of the new material.
+
+Although delta-tracking circumvents the above resampling in the case of surface crossings, there is a 
+potential need to resample at each collision site. The collision site is accepted as an actual reaction 
+with probability
+
+\begin{equation}
+P_{\mathrm{col}}(E) = \frac{\Sigma_{\mathrm{tot,col}}(E)}{\Sigma_{\mathrm{maj}}(E)} 
+\end{equation}
+
+\noindent and rejected as a ``virtual" collision otherwise. It is important to note that this rejection
+sampling must use the total macrscopic cross section of the material in which the collision is being 
+considered and not the material in which the neutron was originally located. If the collision is 
+considered virtual, a new path length is sampled with the majorant cross section again, and the transport
+process continues.
+
+It should be noted that calculating the majorant cross section in WARP is done na{\"i}vely:
+
+\begin{equation}
+\label{eq:majnaive}
+\Sigma_{\mathrm{maj}}(E)
+= \max\{\Sigma_{\mathrm{tot,1}}(E), \Sigma_{\mathrm{tot,2}}(E), \ldots, \Sigma_{\mathrm{tot,M}}(E)\}\:,
+\end{equation}
+
+\noindent where $M$ is the number of materials in the entire system. One potential area of development 
+would be to
+calculate the majorant cross section along the neutron's trajectory (as specified in Equation 
+\ref{eq:maj}) rather than this ``global" majorant cross section.
+
+With either tracking method, once the neutron has been determined to undergo an actual collision the 
+reaction it will experience is chosen using the microscopic cross sections of the material in which 
+the particle is located. Following this, the reaction is processed, and transport continues as above.
+
+\section{Performance potential of delta-tracking in WARP}
+
+Because the OptiX trace must be done twice in each instance of the delta-tracking process and the origina 
+ray tracing method only necessitates one trace, it may be that the current implementation of 
+delta-tracking may not result be faster than standard ray tracing for simple geometry and 
+material configurations. It has been seen in various other Monte Carlo neutron
+transport codes that the bulk of the runtime is involved with ray tracing, and WARP is not too different
+from other codes in that regard.
+This issue could potentially be circumvented if a different framework were to be used rather than OptiX,
+but this would require a sizable overhaul of the code and was not considered for this
+project. Further, the OptiX framework is optimized for NVIDIA GPUs and at this time it is unclear what
+a new, better choice might be. 
+
+However, it is expected that, like in other codes, delta-tracking may be more efficient in WARP when
+considering certain geometry configurations. Like Serpent, WARP is intended for calculations in nuclear
+reactor analysis. Many reactor configurations consist of lattices composed of many geometry and material
+boundaries, causing simulations that use ray tracing to run slowly because 
+neutron flights stop at each boundary crossing. Thus, the time saved in not stopping neutron
+flights at boundary crossings may compensate for having to call an additional OptiX trace in the 
+delta-tracking method implemented in WARP.
+

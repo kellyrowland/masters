@@ -1,0 +1,61 @@
+\chapter{Introduction}
+
+\section{Motivation}
+
+Graphics processing units (GPUs) have gradually increased in computational power from small, 
+job-specific boards to programmable powerhouses. Compared to more common central processing units (CPUs), 
+GPUs have a higher aggregate memory bandwidth, much higher floating-point operations per second 
+(FLOPs), and lower energy consumption per FLOP \cite{warp2015}.
+
+As we approach exascale computing, many institutions are investing in GPU hardware to help achieve these
+peak speeds. In the United States, Oak Ridge National Laboratory (ORNL) and Lawrence Livermore National
+Laboratory (LLNL) are both acquiring high-performance computing systems that include NVIDIA GPU 
+architectures \cite{ornl, llnl}. The computer system to be built at the Oak Ridge Leadership Computing
+Facility will be named ``Summit" and will consist of nodes with multiple IBM POWER9 CPUs and NVIDIA Volta
+accelerators. The architecture will use a coherent memory space that includes high bandwidth memory on the
+GPUs and a high speed NVLink interconnect between the POWER9 CPU and Volta GPUs \cite{ornl}. ``Sierra",
+the next advanced technology high-performance computing system to be introduced into LLNL's High
+Performance Computing Complex, will also incorporate IBM POWER and NVIDIA Volta processors \cite{llnl}.
+Additionally, it is estimated that Sierra will be about five times more power efficient than its
+predecessor, Sequoia, while providing four to six times the sustained performance and five to seven times
+the workload performance.
+
+Supercomputing systems that use GPUs to accelerate computation are competitive in terms of speed when 
+compared to other types of supercomputers. The TOP500 project uses a benchmark of ability to solve
+linear systems of equations in dense matrix form to rank supercomputers. The most recent TOP500 list was
+published in November 2014 \cite{top500} and demonstrated that supercomputers using GPU acceleration can
+achieve peak speeds. The No.\ 2 and No.\ 6 systems both use NVIDIA GPUs to accelerate computation. 
+Overall, fifty of the top 500 systems use NVIDIA chips for acceleration \cite{top500}.
+
+However, transitioning to using these GPU-accelerated supercomputers will require substantial time
+and effort. For many algorithms, CPU-optimized parallel algorithms are not directly portable to GPU 
+architectures. In the field of nuclear engineering research and simulation specifically, neutral particle
+transport codes must be rewritten to execute efficiently on GPUs \cite{warp2015}. In particular, the field
+of nuclear engineering uses particle transport codes for reactor analysis, criticality safety, nuclear 
+security and nonproliferation, detection, and shielding calculations.
+
+Currently, there are not any general purpose Monte Carlo codes that execute on GPUs.
+Two prominent codes used for neutron transport calculations in nuclear reactor analysis are the Monte
+Carlo N-Particle (MCNP) code and the Serpent code. Both pieces of software use Monte Carlo methods to 
+track neutron histories and perform criticality calculations on CPU-based computer architectures 
+\cite{mcnp, serp_man}. At this time, however, there are no plans to adapt the MCNP code for use on GPUs
+\cite{mcnp_nogpu}, providing incentive for nuclear engineering researchers to begin developing their own
+Monte Carlo neutron transport software for efficient use on GPUs.
+
+\section{WARP}
+
+WARP, which can stand for ``Weaving All the Random Particles", is a three-dimensional (3D), continuous 
+energy, Monte Carlo neutron transport code originally developed by Dr. Ryan M. Bergmann at UC Berkeley to 
+efficiently execute on a CPU/GPU platform \cite{warp2015}. WARP is able to calculate multiplication 
+factors, flux tallies, and fission source distributions for time-independent problems and can run in both 
+criticality or fixed-source modes. WARP currently transports neutrons in unrestricted arrangements of 
+spheres, cylinders, parallelpipeds, and hexagonal prisms \cite{warp2015} and is able to entertain both 
+vacuum and reflecting (specular) boundary conditions.
+
+What sets WARP apart from previous, somewhat similar endeavors is its breadth of scope and novel 
+adaptation of the event-based Monte Carlo algorithm. Previous codes have been limited to restricted 
+nuclear data or simplified geometry models, where WARP instead loads standard data files and uses a 
+flexible, scalable, optimized geometry representation \cite{warp2015}. WARP uses a suite of 
+highly-parallelized algorithms and employs a modified version of the original event-based algorithm that 
+is better suited to GPU execution. For full detail, please see the paper by Bergmann and Vuji{\'c} (2015) 
+\cite{warp2015}.

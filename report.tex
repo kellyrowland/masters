@@ -1,0 +1,105 @@
+\documentclass[masters]{ucbthesis}
+\usepackage[sorting=none]{biblatex}
+\usepackage{amsmath}
+\usepackage[version=3]{mhchem}
+\usepackage{graphicx,subcaption}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{notoccite}
+\usepackage[section]{placeins}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+% Double spacing, if you want it.
+% \def\dsp{\def\baselinestretch{2.0}\large\normalsize}
+% \dsp
+
+% If the Grad. Division insists that the first paragraph of a section
+% be indented (like the others), then include this line:
+\usepackage{indentfirst}
+
+\newtheorem{theorem}{Jibberish}
+
+\bibliography{references}
+
+\hyphenation{mar-gin-al-ia}
+
+\setcounter{tocdepth}{3}
+
+\makeatletter
+
+\AtBeginDocument{%
+     \expandafter\renewcommand\expandafter\subsection\expandafter
+       {\expandafter\@fb@subsecFB\subsection}%
+     \newcommand\@fb@subsecFB{\FloatBarrier
+     \gdef\@fb@afterHHook{\@fb@topbarrier \gdef\@fb@afterHHook{}}}
+     \g@addto@macro\@afterheading{\@fb@afterHHook}
+     \gdef\@fb@afterHHook{}
+  }
+
+\begin{document}
+
+% Declarations for Front Matter
+
+\title{Delta-tracking in the GPU-accelerated WARP Monte Carlo Neutron Transport Code}
+\author{Kelly L. Rowland}
+\degreesemester{Spring}
+\degreeyear{2015}
+\degree{Master of Science}
+\chair{Assistant Professor Rachel Slaybaugh}
+\othermembers{Assistant Professor Massimiliano Fratoni \\ Professor Jasmina Vuji{\'c}}
+\numberofmembers{3}
+\prevdegrees{B.S. Rensselaer Polytechnic Institute 2013}
+\field{Engineering - Nuclear Engineering}
+\campus{Berkeley}
+
+% For a masters thesis, uncomment (remove the % at the beginning of)
+% the following line.  This affects the title and approval pages,
+% which by default calls this a "dissertation", not a "thesis".
+
+%\itsamasters
+
+\maketitle
+\approvalpage
+\copyrightpage
+
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+
+\begin{frontmatter}
+
+\begin{acknowledgements}
+
+\noindent This material is based upon work supported under an Integrated University Program Graduate 
+Fellowship.
+\\ \\
+\noindent This work was partially supported by the Department of Energy National Nuclear Security 
+Administration under Award Number(s) DE-NA0000979: The National Science and Security Consortium (NSSC), 
+http://nssc.berkeley.edu/.
+
+\end{acknowledgements}
+
+\end{frontmatter}
+
+\include{intro}
+\include{background}
+\include{implementation}
+\include{results}
+\include{futurework}
+
+\begin{appendix}
+\include{appendix}
+\end{appendix}
+
+\printbibliography
+
+\end{document}

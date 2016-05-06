@@ -1,0 +1,41 @@
+\chapter{Conclusions and Future Work}
+
+\section{Conclusions}
+
+In this work, delta-tracking was implemented as a neutron tracking routine in a GPU-accelerated Monte
+Carlo neutron transport code and the results were compared for accuracy and speed with respect to the 
+original ray tracing version of the code. For systems comprised solely of a homogeneous material, the
+delta-tracking method produced results consistent to within statistical uncertainty of those calculated
+using ray tracing. The delta-tracking method failed to achieve consistent results when simulating
+heterogeneous systems, however. Further testing of homogeneous systems with artificial boundaries in 
+place revealed that those boundaries do not skew the results of the delta-tracking routine such that they
+are outside of the level expected. Thus, it may be concluded that there are existing bugs in the
+original ray tracing version of the code that the delta-tracking routine exacerbates, causing results
+from the latter method to be incorrect.
+
+The speeds of the two physics methods were comparable, with ray tracing often slightly faster than 
+delta-tracking. The relative lag of the delta-tracking method can be easily explained by the fact that it
+requires an additional OptiX trace in addition to the single trace required by ray tracing. However, since
+ the runtimes of both methods were fairly close we assert that, for configurations with many cells, the
+homogenization of the delta-tracking may mitigate the effect of the slowdown from the second trace, 
+allowing it to perform better than ray tracing.
+
+However, before further scaling studies can be done with the delta-tracking method, the original core of
+the code must be closely examined to resolve existing bugs. After the prevalent issues have been solved,
+delta-tracking may be revisited.
+
+\section{Future Work}
+
+The first point of future work is to resolve the issues in the existing ray tracing code. This will be
+done in several thrusts. Work is planned to reorganize the main data structures in the code such that
+they are simpler, more intuitive, and more easily understood by interested developers new to the code.
+Additionally, more unit testing in the code will provide useful information about the functionality of the individual CUDA kernels. If it is known that all individual kernels are functioning as expected, it 
+follows that the code as a whole should function as expected as well.
+
+Once the core of the WARP code has been restructured and unit tests implemented such that WARP is more
+robust and correct, delta-tracking may be revisited. The implementation discussed here should be tested
+against the fixed code to verify correctness and measure speed. If this delta-tracking method is still
+slower than ray tracing for the majority of configurations, an alternative algorithm may be developed. 
+The OptiX framework may be leveraged to provide the information needed for the delta-tracking method
+using only one trace, which could allow delta-tracking to perform better than ray tracing.
+
